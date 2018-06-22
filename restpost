@@ -1,0 +1,29 @@
+curl -X POST -H "Content-Type: application/json" -d '{"name":"indoortestcup1","protocol":"HTTP","address":"192.168.40.10","port":49977,"path":"/indoortest","publisher":"none","user":"none","password":"none","topic":"none"}' http://192.168.40.10:48081/api/v1/addressable
+
+curl -X POST -H "Content-Type: application/json" -d '
+{"name":"cameraA address","protocol":"HTTP","address":"192.168.40.10","port":49999,"path":"/camera1","publisher":"none","user":"none","password":"none","topic":"none"}' http://192.168.40.10:48081/api/v1/addressable
+
+#second camera
+curl -X POST -H "Content-Type: application/json" -d '
+{"name":"cameraB address","protocol":"HTTP","address":"192.168.40.10","port":49999,"path":"/camera2","publisher":"none","user":"none","password":"none","topic":"none"}' http://192.168.40.10:48081/api/v1/addressable
+
+curl -X POST -H "Content-Type: application/json" -d '
+{"name":"cupcount","description":"cup count", "min":"0","max":"100","type":"I","uomLabel":"count","defaultValue":"0","formatting":"%s","labels":["count","cups"]}' http://localhost:48080/api/v1/valuedescriptor
+
+ 
+curl -F key=value -F file=@xiaomicamera.yml http://localhost:48081/api/v1/deviceprofile/uploadfile
+
+curl -X POST -H "Content-Type: application/json" -d '
+{"name":"xiaomi camera control device service","description":"Manage cup counting cameras","labels":["camera","counter"],"adminState":"unlocked","operatingState":"enabled","addressable":{"name":"indoortestcup1"}}' http://localhost:48081/api/v1/deviceservice
+
+#provision device
+curl -X POST -H "Content-Type: application/json" -d '
+{"name":"cupcountcamera1","description":"cup counting camera #1","adminState":"unlocked","operatingState":"enabled","addressable":{"name":"cameraA address"},"labels":["camera","counter"],"location":"","service":{"name":"xiaomi camera control device service"},"profile":{"name":"xiaomi camera monitor profile"}}' http://localhost:48081/api/v1/device
+
+
+curl -X POST -H "Content-Type: application/json" -d '
+{"name":"cupcountcamera2","description":"cup counting camera #2","adminState":"unlocked","operatingState":"enabled","addressable":{"name":"cameraB address"},"labels":["camera","counter"],"location":"","service":{"name":"xiaomi camera control device service"},"profile":{"name":"xiaomi camera monitor profile"}}' http://localhost:48081/api/v1/device
+
+#send event from device
+curl -X POST -H "Content-Type: application/json" -d '
+{"device":"cupcountcamera1","readings":[{"name":"cupcount","value":"3"}]}' http://localhost:48080/api/v1/event
