@@ -21,6 +21,8 @@ package org.edgexfoundry.rule.domain;
 public class Rule {
 
   private String name;
+  //pengzhou: groupname
+  private String groupname;
   private Condition condition;
   private Action action;
   private String log;
@@ -31,6 +33,14 @@ public class Rule {
 
   public void setName(String name) {
     this.name = name;
+  }
+  //pengzhou: get and set group name method
+  public String getgroupName() {
+    return groupname;
+  }
+
+  public void setgroupName(String name) {
+    this.name = groupname;
   }
 
   public Condition getCondition() {

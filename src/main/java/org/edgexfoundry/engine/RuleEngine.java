@@ -81,10 +81,15 @@ public class RuleEngine {
           ksession.setGlobal("executor", executor);
           ksession.setGlobal("logger", logger);
           ksession.insert(object);
+          //pengzhou: here below fire the rules according to the level of event 
+          //Agenda agenda = ksession.getAgenda();
+          //agenda.getAgendaGroup( "emergency" ).setFocus();
+          //agenda.getAgendaGroup( "congestion" ).setFocus();
+          //agenda.getAgendaGroup( "update" ).setFocus();
           int rulesFired = ksession.fireAllRules();
-          logger.debug("Number of rules fired on event: " + rulesFired);
+          //logger.debug("Number of rules fired on event: " + rulesFired);
           if (rulesFired > 0) {
-            logger.info("Event triggered " + rulesFired + "rules: " + (Event) object);
+            //logger.info("Event triggered " + rulesFired + "rules: " + (Event) object);
           }
         } else
           logger.error("Command Executor not available - no command sent for event: " + object);

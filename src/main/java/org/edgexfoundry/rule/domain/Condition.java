@@ -23,11 +23,19 @@ import java.util.List;
 
 public class Condition {
 
+  private String eventtype;
   private String device;
+  private String devicetype;
   private List<ValueCheck> checks;
 
+  public String geteventType() {
+    return eventtype;
+  }
   public String getDevice() {
     return device;
+  }
+  public String getDevicetype() {
+    return devicetype;
   }
 
   public void setDevice(String device) {

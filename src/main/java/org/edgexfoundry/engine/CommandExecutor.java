@@ -18,6 +18,11 @@
 
 package org.edgexfoundry.engine;
 
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.DatagramChannel;
+
 import org.edgexfoundry.controller.CmdClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -35,8 +40,8 @@ public class CommandExecutor {
 
   @Async
   public void fireCommand(String deviceId, String commandId, String body) {
-    logger.info(
-        "Sending request to:  " + deviceId + "for command:  " + commandId + " with body: " + body);
+    //logger.info(
+        //"Sending request to:  " + deviceId + "for command:  " + commandId + " with body: " + body);
     try {
       // for now - all rule engine requests are puts
       forwardRequest(deviceId, commandId, body, true);
@@ -44,7 +49,7 @@ public class CommandExecutor {
       logger.error("Problem sending command to the device service " + exception);
     }
   }
-
+  /*
   private void forwardRequest(String id, String commandId, String body, boolean isPut) {
     if (client != null) {
       if (isPut)
@@ -56,5 +61,33 @@ public class CommandExecutor {
           + " containing: " + body);
     }
   }
+  */
+  private void forwardRequest(String id, String commandId, String body, boolean isPut) {
+      String ip = "192.168.40.60";
+      int port = 51717;
+      InetSocketAddress serverAddr = new InetSocketAddress(ip, port);
+      DatagramChannel dataChannel; 
+	  try {    
+		  dataChannel = DatagramChannel.open(); 
+          dataChannel.configureBlocking(false);     
+		  dataChannel.socket().connect(serverAddr);
+	       
+          byte[] packetContent = new byte[10000];
 
+          byte[] frmid = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(-1).array();
+          byte[] datatype = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(1).array();
+          byte[] frmsize = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(500).array();
+          System.arraycopy(frmid, 0, packetContent, 0, 4);
+          System.arraycopy(datatype, 0, packetContent, 4, 4);
+          System.arraycopy(frmsize, 0, packetContent, 8, 4);
+          //System.out.print(body);
+          System.arraycopy(body.getBytes(), 0, packetContent, 12, body.length());
+
+          ByteBuffer buffer = ByteBuffer.allocate(packetContent.length).put(packetContent);
+          buffer.flip();
+          dataChannel.send(buffer, serverAddr);
+      } catch (Exception e) {
+          e.printStackTrace();
+      }
+  }
 }

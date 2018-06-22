@@ -23,7 +23,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.concurrent.TimeUnit;
+import java.lang.Object;
 
 import org.edgexfoundry.domain.core.Event;
 import org.edgexfoundry.engine.RuleEngine;
@@ -31,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.zeromq.ZMQ;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 /**
  * Export data message ingestion bean - gets messages out of ZeroMQ from export service.
@@ -48,11 +52,16 @@ public class ZeroMQEventSubscriber {
   private String zeromqAddress;
   @Value("${export.client}")
   private boolean exportClient;
-
+  //pengzhou: port and addr for device discovery from metadata
+  @Value("${export.zeromq.portdevice}")
+  private String zeromqAddressPort_device;
+  @Value("${export.zeromq.host}")
+  private String zeromqAddress_device;
   @Autowired
   RuleEngine engine;
 
   private ZMQ.Socket subscriber;
+  private ZMQ.Socket subscriber_device;
   private ZMQ.Context context;
 
   {
@@ -65,6 +74,12 @@ public class ZeroMQEventSubscriber {
     byte[] exportBytes = null;
     Event event;
     logger.info("Watching for new exported Event messages...");
+    double[] dur;
+    double sum = 0;
+    double mean = 0;
+    int i = 0;
+    
+    dur = new double[1000];
     try {
       while (!Thread.currentThread().isInterrupted()) {
         if (exportClient) {
@@ -73,9 +88,27 @@ public class ZeroMQEventSubscriber {
         } else {
           exportBytes = subscriber.recv();
           event = toEvent(exportBytes);
+          //pengzhou: try print the event to see the format
+          System.out.println(event);
         }
+        //pengzhou: here below send the event to the rule engine
+    	double startTime = System.nanoTime();
         engine.execute(event);
-        logger.info("Event sent to rules engine for device id:  " + event.getDevice());
+        double endTime = System.nanoTime();
+        double duration = (endTime - startTime); 
+        //logger.info("duratino of excution is " +  TimeUnit.SECONDS.convert(duration, TimeUnit.NANOSECONDS));
+        dur[i] = duration;
+        sum += duration; 
+        //logger.info("event number " + i);
+        if (i == 999) {
+        	mean = sum/1000;
+        	StandardDeviation sd2 = new StandardDeviation();        	
+        	logger.info("average duration is " + mean + " std is " + sd2.evaluate(dur) + " nanoseconds");
+        	System.out.println(Arrays.toString(dur));
+        }
+        i += 1;
+        //logger.info("Event sent to rules engine for device id:  " + event.getDevice());
+        
       }
     } catch (Exception e) {
       logger.error("Unable to receive messages via ZMQ: " + e.getMessage());
@@ -85,6 +118,7 @@ public class ZeroMQEventSubscriber {
       subscriber.close();
     subscriber = null;
     // try to restart
+
     logger.debug("Attempting restart of Event message watch.");
     receive();
   }
@@ -119,6 +153,21 @@ public class ZeroMQEventSubscriber {
     return subscriber;
   }
 
+  //pengzhou: discover new device
+  /*private ZMQ.Socket getSubscriber_device() {
+	    if (subscriber_device == null) {
+	      try {
+	        subscriber_device = context.socket(ZMQ.SUB);
+	        subscriber_device.connect(zeromqAddress_device + ":" + zeromqAddressPort_device);
+	        subscriber_device.subscribe("".getBytes());
+	      } catch (Exception e) {
+	        logger.error("Unable to get a ZMQ subscriber for device discovery.  Error:  " + e);
+	        subscriber_device = null;
+	      }
+	    }
+	    return subscriber;
+	  }
+  */
   private Event toEvent(String eventString) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(eventString);
     ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(data));

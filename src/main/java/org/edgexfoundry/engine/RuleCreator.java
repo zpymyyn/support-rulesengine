@@ -69,6 +69,10 @@ public class RuleCreator {
   private Map<String, Object> createMap(Rule rule) {
     Map<String, Object> map = new HashMap<>();
     map.put("rulename", rule.getName());
+    //pengzhou: add group name here
+    //map.put("groupname", rule.getgroupName());
+    //map.put("condeventtype", rule.getCondition().geteventtype());
+    map.put("conddevicetype", rule.getCondition().getDevicetype());
     map.put("conddeviceid", rule.getCondition().getDevice());
     map.put("valuechecks", rule.getCondition().getChecks());
     map.put("actiondeviceid", rule.getAction().getDevice());

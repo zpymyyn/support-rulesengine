@@ -18,6 +18,7 @@
 
 package org.edgexfoundry;
 
+import org.edgexfoundry.engine.CommandExecutor;
 import org.edgexfoundry.messaging.ZeroMQEventSubscriber;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -30,11 +31,17 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableDiscoveryClient
 public class Application {
 
+
   public static void main(String[] args) {
     ConfigurableApplicationContext ctx = SpringApplication.run(Application.class, args);
     String welcomeMsg = ctx.getEnvironment().getProperty("app.open.msg");
     ZeroMQEventSubscriber sub = ctx.getBean(ZeroMQEventSubscriber.class);
     System.out.println(welcomeMsg);
+    //pengzhou: below is the starting of the reading event to the rules
+    //long startTime = System.nanoTime();
     sub.receive();
+    //long endTime = System.nanoTime();
+    //long duration = (endTime - startTime); 
+    //logger.info("duratino of excution is " + duration);
   }
 }

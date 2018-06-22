@@ -1,0 +1,14 @@
+package org.edgexfoundry.rules;
+global org.edgexfoundry.engine.CommandExecutor executor;
+global org.edgexfoundry.support.logging.client.EdgeXLogger logger;
+import org.edgexfoundry.domain.core.Event;
+import org.edgexfoundry.domain.core.Reading;
+import java.util.Map;
+rule "test" 
+when
+  $e:Event($rlist: readings)
+  $r0:Reading(name=="cupcount" && Integer.parseInt(value) > 2) from $rlist
+then
+executor.fireCommand("5b1bb882e4b009e74ad38cc8", " ", "{watch out the cups, god know why}");
+logger.info("too many cups!");
+end
